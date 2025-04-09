@@ -80,6 +80,15 @@ impl LoggerUi {
         self
     }
 
+    /// Set logger filter level
+    #[inline]
+    pub fn set_filter_level(mut self, filter_level: log::Level) -> Self {
+        for level in LEVELS {
+            self.loglevels[level as usize - 1] = level <= filter_level;
+        }
+        self
+    }
+
     /// Enable or disable the context menu
     /// Default is true
     #[inline]
