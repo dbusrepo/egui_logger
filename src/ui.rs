@@ -25,6 +25,8 @@ struct LoggerStyle {
     time_precision: TimePrecision,
     time_format: TimeFormat,
 
+    info_color: Color32,
+    debug_color: Color32,
     warn_color: Color32,
     error_color: Color32,
     highlight_color: Color32,
@@ -38,6 +40,8 @@ impl Default for LoggerStyle {
             enable_ctx_menu: true,
             time_format: TimeFormat::LocalTime,
             time_precision: TimePrecision::Seconds,
+            info_color: Color32::WHITE,
+            debug_color: Color32::GREEN,
             warn_color: Color32::YELLOW,
             error_color: Color32::RED,
             highlight_color: Color32::LIGHT_GRAY,
@@ -102,6 +106,18 @@ impl LoggerUi {
     #[inline]
     pub fn show_target(mut self, enable: bool) -> Self {
         self.style.show_target = enable;
+        self
+    }
+
+    #[inline]
+    pub fn info_color(mut self, color: Color32) -> Self {
+        self.style.info_color = color;
+        self
+    }
+
+    #[inline]
+    pub fn debug_color(mut self, color: Color32) -> Self {
+        self.style.debug_color = color;
         self
     }
 
@@ -414,6 +430,8 @@ fn format_record(
     ))
     .monospace();
     match record.level {
+        log::Level::Info => date_str = date_str.color(logger_style.info_color),
+        log::Level::Debug => date_str = date_str.color(logger_style.debug_color),
         log::Level::Warn => date_str = date_str.color(logger_style.warn_color),
         log::Level::Error => date_str = date_str.color(logger_style.error_color),
         _ => {}
@@ -422,6 +440,8 @@ fn format_record(
     date_str.append_to(&mut layout_job, &style, FontSelection::Default, Align::LEFT);
 
     let highlight_color = match record.level {
+        log::Level::Info => logger_style.info_color,
+        log::Level::Debug => logger_style.debug_color,
         log::Level::Warn => logger_style.warn_color,
         log::Level::Error => logger_style.error_color,
         _ => logger_style.highlight_color,
@@ -434,6 +454,8 @@ fn format_record(
 
     let mut message = RichText::new(&record.message).monospace();
     match record.level {
+        log::Level::Info => message = message.color(logger_style.info_color),
+        log::Level::Debug => message = message.color(logger_style.debug_color),
         log::Level::Warn => message = message.color(logger_style.warn_color),
         log::Level::Error => message = message.color(logger_style.error_color),
         _ => {}
