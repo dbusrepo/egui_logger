@@ -286,7 +286,7 @@ impl LoggerUi {
                         return;
                     }
 
-                    let layout_job = format_record(logger, &self.style, record, time_padding);
+                    let layout_job = format_record(logger, ui, &self.style, record, time_padding);
 
                     let raw_text = layout_job.text.clone();
 
@@ -334,7 +334,7 @@ impl LoggerUi {
                         .take(self.max_log_length)
                         .for_each(|record| {
                             out_string.push_str(
-                                &format_record(logger, &self.style, record, time_padding).text,
+                                &format_record(logger, ui, &self.style, record, time_padding).text,
                             );
                             out_string.push_str(" \n");
                         });
@@ -410,34 +410,12 @@ fn format_time(
 
 fn format_record(
     logger: &Logger,
+    ui: &mut egui::Ui,
     logger_style: &LoggerStyle,
     record: &Record,
     time_padding: usize,
 ) -> LayoutJob {
-    let level_target = format!(
-        "[{:5}] {: <width$}: ",
-        record.level,
-        record.target,
-        width = logger.max_category_length
-    );
-    let mut layout_job = LayoutJob::default();
-    let style = Style::default();
-
-    let mut date_str = RichText::new(format!(
-        "{: >width$} ",
-        format_time(record.time, logger_style, logger.start_time),
-        width = time_padding
-    ))
-    .monospace();
-    match record.level {
-        log::Level::Info => date_str = date_str.color(logger_style.info_color),
-        log::Level::Debug => date_str = date_str.color(logger_style.debug_color),
-        log::Level::Warn => date_str = date_str.color(logger_style.warn_color),
-        log::Level::Error => date_str = date_str.color(logger_style.error_color),
-        _ => {}
-    }
-
-    date_str.append_to(&mut layout_job, &style, FontSelection::Default, Align::LEFT);
+    let style = ui.style();
 
     let highlight_color = match record.level {
         log::Level::Info => logger_style.info_color,
@@ -447,21 +425,32 @@ fn format_record(
         _ => logger_style.highlight_color,
     };
 
-    RichText::new(level_target)
+    let mut layout_job = LayoutJob::default();
+
+    let mut date_str = RichText::new(format!(
+        "{: >width$} ",
+        format_time(record.time, logger_style, logger.start_time),
+        width = time_padding
+    ))
+    .monospace()
+    .color(Color32::LIGHT_GRAY)
+    .append_to(&mut layout_job, &style, FontSelection::Default, Align::LEFT);
+
+    let level_target = RichText::new(format!(
+        "[{:5}] {: <width$}: ",
+        record.level,
+        record.target,
+        // width = logger.max_category_length
+        width = record.target.len()
+    ))
+    .monospace()
+    .color(highlight_color)
+    .append_to(&mut layout_job, &style, FontSelection::Default, Align::LEFT);
+
+    let mut message = RichText::new(&record.message)
         .monospace()
-        .color(highlight_color)
+        .color(Color32::WHITE)
         .append_to(&mut layout_job, &style, FontSelection::Default, Align::LEFT);
-
-    let mut message = RichText::new(&record.message).monospace();
-    match record.level {
-        log::Level::Info => message = message.color(logger_style.info_color),
-        log::Level::Debug => message = message.color(logger_style.debug_color),
-        log::Level::Warn => message = message.color(logger_style.warn_color),
-        log::Level::Error => message = message.color(logger_style.error_color),
-        _ => {}
-    }
-
-    message.append_to(&mut layout_job, &style, FontSelection::Default, Align::LEFT);
 
     layout_job
 }
