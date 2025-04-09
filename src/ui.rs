@@ -84,6 +84,13 @@ impl LoggerUi {
         self
     }
 
+    /// Set max log length
+    #[inline]
+    pub fn set_max_log_length(mut self, length: usize) -> Self {
+        self.max_log_length = length;
+        self
+    }
+
     /// Set logger filter level
     #[inline]
     pub fn set_filter_level(mut self, filter_level: log::Level) -> Self {
