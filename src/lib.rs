@@ -171,3 +171,9 @@ fn main() {
 pub fn builder() -> Builder {
     Builder::default()
 }
+
+pub fn clear_log() {
+    if let Ok(ref mut logger) = LOGGER.lock() {
+        logger.logs.clear();
+    }
+}
